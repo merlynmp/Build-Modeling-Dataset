@@ -1,0 +1,139 @@
+
+import os
+import pandas as pd
+import numpy as np
+%matplotlib inline
+import matplotlib.pyplot as plt 
+import seaborn as sns
+sns.set_theme()
+
+# Do not remove or edit the line below:
+filename = os.path.join(os.getcwd(), "data", "listings.csv.gz")
+
+# YOUR CODE HERE
+df = pd.read_csv(filename, header = 0)
+
+# YOUR CODE HERE
+df.shape
+
+# YOUR CODE HERE
+df.head()
+
+unstr_text_colnames = ['description', 'name', 'neighborhood_overview', 'host_about', 'host_name', 'host_location']
+
+# YOUR CODE HERE
+
+# df.drop? <- explanation
+
+# drop the columns from the list above, inplace to make changes to df
+df.drop(columns = unstr_text_colnames, inplace = True)
+
+# YOUR CODE HERE
+df.shape
+
+# YOUR CODE HERE
+
+# https://www.statology.org/pandas-select-columns-containing-string/
+
+# filter selects columns that contain url
+colnames = [df.filter(regex = 'url')]
+print(colnames[0])
+
+url_colnames = ['listing_url', 'picture_url', 'host_url', 'host_thumbnail_url', 'host_picture_url']
+
+# YOUR CODE HERE
+df.drop(columns = url_colnames, inplace = True)
+
+# YOUR CODE HERE
+df['price'].unique
+
+df['price'] = df['price'].str.replace(',', '')
+df['price'] = df['price'].str.replace('$', '')
+df['price'] = df['price'].astype(float)
+
+df['price'].unique()[:15]
+
+df.head()
+
+# YOUR CODE HERE - import the necessary package
+from scipy import stats
+
+# YOUR CODE HERE  - add the new column to the DataFrame
+df['label_price'] = stats.mstats.winsorize(df['price'], limits = [0.01, 0.01])
+
+df.head()
+
+# YOUR CODE HERE
+
+noidentical = (df['price'] - df['label_price']).unique()
+print(len(noidentical))
+
+
+nan_count = np.sum(df.isnull())
+nan_count
+
+nan_detected = nan_count != 0
+nan_detected
+
+# get columns of nan_count
+print(nan_count.index)
+
+print("\n")
+
+# dtypes of the columns
+is_int_or_float = df[nan_count.index].dtypes
+
+# stores true/false values to see if the dtype is int or float
+is_int_or_float = (is_int_or_float == int) | (is_int_or_float == float)
+is_int_or_float
+
+to_impute = nan_detected & is_int_or_float
+to_impute
+
+df.columns[to_impute]
+
+to_impute_selected = ['host_listings_count', 'host_total_listings_count', 'bathrooms',
+       'bedrooms', 'beds']
+
+for colname in to_impute_selected:
+    # YOUR CODE HERE - complete the loop
+    df['to_impute_selected_na'] = colname
+
+df.head()
+
+# replace the null values with the mean for each column
+for colname in to_impute_selected:
+    df[colname].fillna(value = df[colname].mean(), inplace = True)
+
+for colname in to_impute_selected:
+    print("{} missing values count :{}".format(colname, np.sum(df[colname].isnull(), axis = 0)))
+
+
+# YOUR CODE HERE - returning unique values of bathroom
+df['bathrooms'].unique()
+
+df.corr().head()
+
+# corr has the row examples of label_price
+corrs = df.corr()['label_price']
+corrs
+
+corrs_sorted = corrs.sort_values(ascending = False)
+corrs_sorted
+
+top_two_corr = [corrs_sorted.index[2], corrs_sorted.index[3]]
+top_two_corr
+
+# Do not remove or edit the line below:
+top_two_corr.append('label_price')
+print(top_two_corr)
+
+
+df_sub = df[top_two_corr]
+df_sub
+
+# YOUR CODE HERE
+sns.pairplot(data = df_sub)
+
+# YOUR CODE HERE
+sns.pairplot(data = df_sub, kind = 'kde', corner = True)
